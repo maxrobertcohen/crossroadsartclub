@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crossroads Art Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Lora:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #F2EDE3;
+      --ink: #1A1917;
+      --rust: #C94A1A;
+      --sage: #2E4A3A;
+      --mid: #7A7060;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Lora', serif;
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    /* GRAIN OVERLAY */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 200px;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 40px;
+      background: var(--cream);
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .nav-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--ink);
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--rust); }
+
+    .nav-donate {
+      background: var(--rust);
+      color: var(--cream) !important;
+      padding: 8px 18px;
+      transition: background 0.2s !important;
+    }
+
+    .nav-donate:hover { background: var(--ink) !important; color: var(--cream) !important; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 120px 40px 60px;
+      border-bottom: 1.5px solid var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(72px, 12vw, 180px);
+      line-height: 0.9;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: var(--ink);
+      max-width: 900px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--rust);
+      -webkit-text-stroke: 0px;
+    }
+
+    .hero-sub {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: end;
+    }
+
+    .hero-desc {
+      font-size: 19px;
+      line-height: 1.6;
+      max-width: 480px;
+      color: var(--ink);
+    }
+
+    .hero-meta {
+      text-align: right;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      line-height: 2;
+      color: var(--mid);
+      letter-spacing: 0.04em;
+    }
+
+    .hero-meta strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    /* PHOTO STRIP */
+    .photo-strip {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      height: 420px;
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .photo-box {
+      background: #D9D3C7;
+      border-right: 1.5px solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .photo-box:last-child { border-right: none; }
+
+    .photo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-placeholder {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--mid);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* SECTION BASE */
+    section {
+      padding: 80px 40px;
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rust);
+      opacity: 0.3;
+    }
+
+    /* ABOUT */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .about-grid h2 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(42px, 5vw, 72px);
+      line-height: 1;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .about-grid p {
+      margin-bottom: 20px;
+      color: #2A2820;
+    }
+
+    .about-quote {
+      margin-top: 48px;
+      padding: 32px;
+      border-left: 4px solid var(--rust);
+      background: rgba(201, 74, 26, 0.06);
+    }
+
+    .about-quote blockquote {
+      font-size: 22px;
+      font-style: italic;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+
+    .about-quote cite {
+      display: block;
+      margin-top: 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-style: normal;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+
+    /* DARK SECTION */
+    .section-dark {
+      background: var(--sage);
+      color: var(--cream);
+      border-bottom: 1.5px solid var(--ink);
+    }
+
+    .section-dark .section-label {
+      color: #8FBF9F;
+    }
+
+    .section-dark .section-label::after {
+      background: #8FBF9F;
+    }
+
+    .section-dark h2 {
+      color: var(--cream);
+    }
+
+    .section-dark p {
+      color: #C5D5C9;
+    }
+
+    /* COMIC */
+    .comic-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .comic-cover {
+      aspect-ratio: 3/4;
+      background: #1A2E22;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .comic-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .comic-cover-placeholder {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .comic-cover-placeholder .title {
+      font-family: 'Anton', sans-serif;
+      font-size: 36px;
+      text-transform: uppercase;
+      color: var(--cream);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .comic-cover-placeholder .subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: #8FBF9F;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .comic-content h2 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(42px, 4vw, 60px);
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 28px;
+    }
+
+    .comic-content p {
+      margin-bottom: 20px;
+      font-size: 17px;
+    }
+
+    /* PRESS */
+    .press-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 16px;
+    }
+
+    .press-item {
+      padding: 40px;
+      border: 1.5px solid var(--ink);
+      text-decoration: none;
+      color: var(--ink);
+      display: block;
+      transition: background 0.2s, color 0.2s;
+      position: relative;
+    }
+
+    .press-item:hover {
+      background: var(--ink);
+      color: var(--cream);
+    }
+
+    .press-item:hover .press-pub { color: var(--rust); }
+    .press-item:hover .press-arrow { color: var(--rust); }
+
+    .press-pub {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 16px;
+      transition: color 0.2s;
+    }
+
+    .press-headline {
+      font-family: 'Lora', serif;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-bottom: 16px;
+    }
+
+    .press-arrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+
+    /* SUPPORT */
+    .support-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .support-inner h2 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(42px, 5vw, 72px);
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 28px;
+    }
+
+    .support-inner p {
+      margin-bottom: 20px;
+      font-size: 17px;
+      color: #2A2820;
+    }
+
+    .donate-box {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .donate-btn {
+      display: block;
+      text-align: center;
+      padding: 22px 40px;
+      font-family: 'Anton', sans-serif;
+      font-size: 28px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--cream);
+      background: var(--rust);
+      border: 2px solid var(--rust);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .donate-btn:hover {
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+
+    .donate-note {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--mid);
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 48px;
+    }
+
+    .stat {
+      padding: 32px 24px;
+      border: 1.5px solid var(--ink);
+    }
+
+    .stat-num {
+      font-family: 'Anton', sans-serif;
+      font-size: 52px;
+      line-height: 1;
+      color: var(--rust);
+    }
+
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-top: 8px;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--ink);
+      color: var(--cream);
+      padding: 48px 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: end;
+      gap: 40px;
+    }
+
+    .footer-name {
+      font-family: 'Anton', sans-serif;
+      font-size: 42px;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .footer-name span { color: var(--rust); }
+
+    .footer-info {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      line-height: 2;
+      color: #8A8070;
+      text-align: right;
+    }
+
+    .footer-info a {
+      color: #C5B89A;
+      text-decoration: none;
+    }
+
+    .footer-info a:hover { color: var(--rust); }
+
+    /* FADE IN */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1, .hero-desc, .hero-meta {
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .hero h1 { animation-delay: 0.1s; }
+    .hero-desc { animation-delay: 0.25s; }
+    .hero-meta { animation-delay: 0.35s; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      .hero { padding: 100px 20px 48px; }
+      .hero-sub { grid-template-columns: 1fr; }
+      .hero-meta { text-align: left; }
+      section { padding: 60px 20px; }
+      .photo-strip { grid-template-columns: 1fr; height: auto; }
+      .photo-box { height: 240px; border-right: none; border-bottom: 1.5px solid var(--ink); }
+      .about-grid, .comic-grid, .support-inner, .press-grid { grid-template-columns: 1fr; gap: 40px; }
+      .stats-row { grid-template-columns: 1fr; }
+      footer { grid-template-columns: 1fr; }
+      .footer-info { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">Crossroads Art Club</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#comic">The Comic</a></li>
+      <li><a href="#press">Press</a></li>
+      <li><a href="#support" class="nav-donate">Donate</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <p class="hero-label">Brownsville, Brooklyn &mdash; Est. 2023</p>
+    <h1>Art <em>Club</em></h1>
+    <div class="hero-sub">
+      <p class="hero-desc">
+        A weekly art and music program for young people held in pre-trial detention at NYC ACS Crossroads Juvenile Center. Open studio. Live music. No curriculum. Just making things together.
+      </p>
+      <div class="hero-meta">
+        <strong>Jacob &amp; Max Cohen</strong>
+        Crossroads Juvenile Center<br>
+        Brownsville, Brooklyn<br>
+        Since October 2023
+      </div>
+    </div>
+  </div>
+
+  <!-- PHOTO STRIP -->
+  <div class="photo-strip">
+    <div class="photo-box">
+      <span class="photo-placeholder">Photo: session in progress<br>[replace with session photo]</span>
+    </div>
+    <div class="photo-box">
+      <span class="photo-placeholder">Photo: artwork<br>[replace]</span>
+    </div>
+    <div class="photo-box">
+      <span class="photo-placeholder">Photo: exhibition<br>[replace]</span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <p class="section-label">About the Program</p>
+    <div class="about-grid">
+      <div>
+        <h2>Making things together</h2>
+        <p>The Crossroads Art Club is a biweekly open studio for young people ages 12 to 21 held in pre-trial detention at the NYC Administration for Children's Services Crossroads Juvenile Center in Brownsville, Brooklyn.</p>
+        <p>Brothers Jacob and Max Cohen bring drawing materials, musical instruments, and open studio time into the facility every week. Jacob draws and plays a hand-built electric cello. Max works in visual arts. The sessions are non-prescriptive and voluntary. There is no fixed curriculum. Staff and administrators join alongside the youth.</p>
+        <p>The group is one of the only mixed-gender programs at the facility. Everyone is welcome. The work belongs to whoever makes it.</p>
+      </div>
+      <div>
+        <div class="about-quote">
+          <blockquote>"Art Club changed my life."</blockquote>
+          <cite>Art Club participant, Crossroads Juvenile Center</cite>
+        </div>
+        <div class="stats-row" style="margin-top: 32px;">
+          <div class="stat">
+            <div class="stat-num">2+</div>
+            <div class="stat-label">Years running</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">700</div>
+            <div class="stat-label">Rikers portraits at the Queens Museum</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">5-10</div>
+            <div class="stat-label">Youth each session</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMIC -->
+  <section id="comic" class="section-dark">
+    <p class="section-label">Recent Work</p>
+    <div class="comic-grid">
+      <div class="comic-cover">
+        <!-- Replace with actual comic cover image -->
+        <div class="comic-cover-placeholder">
+          <div class="title">Dr. Octo &amp; the Fate of the Universe</div>
+          <div class="subtitle">[replace with cover image]</div>
+        </div>
+      </div>
+      <div class="comic-content">
+        <h2>Dr. Octo &amp; the Fate of the Universe</h2>
+        <p>In 2025, Art Club published its first comic book, created entirely by the young people in the program. The comic grew out of collaborative drawing sessions at Crossroads and became a document of imaginations at work inside a system that rarely makes room for them.</p>
+        <p>The book was exhibited at the Church of the Incarnation and at Art on the Ave in New York City. A copy traveled to the NY State OCFS Goshen Secure Center when one of the original participants moved there, prompting a workshop celebrating its publication.</p>
+        <p>The comic is available on request. Copies are distributed free to facilities.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRESS -->
+  <section id="press">
+    <p class="section-label">Press</p>
+    <div class="press-grid">
+      <a href="https://hellgatenyc.com/crossroads-art-club-show/" target="_blank" class="press-item">
+        <p class="press-pub">Hellgate NYC</p>
+        <p class="press-headline">Inside the Crossroads Art Club Show</p>
+        <p class="press-arrow">Read &rarr;</p>
+      </a>
+      <a href="https://epicenter-nyc.com/max-and-jacob-cohen-crossroads-art-club/" target="_blank" class="press-item">
+        <p class="press-pub">Epicenter NYC</p>
+        <p class="press-headline">Max and Jacob Cohen: Crossroads Art Club</p>
+        <p class="press-arrow">Read &rarr;</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- SUPPORT -->
+  <section id="support">
+    <p class="section-label">Support the Work</p>
+    <div class="support-inner">
+      <div>
+        <h2>Keep the studio open</h2>
+        <p>Art Club runs on art supplies, instruments, and the time of two people who believe this work matters. Your support goes directly toward materials for the youth and sustaining the program week after week.</p>
+        <p>Crossroads Art Club is fiscally sponsored by Oyate Group, a 501(c)(3) nonprofit based in the Bronx.</p>
+      </div>
+      <div class="donate-box">
+        <a href="https://venmo.com/u/crossroadsartclub" target="_blank" class="donate-btn">Donate via Venmo</a>
+        <p class="donate-note">@crossroadsartclub &bull; All donations go directly to the program</p>
+        <p class="donate-note" style="margin-top: 8px;">For larger gifts or checks, contact us at <a href="mailto:max@crossroadsart.club" style="color: var(--rust);">max@crossroadsart.club</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-name">Crossroads<br><span>Art Club</span></div>
+    <div class="footer-info">
+      Crossroads Juvenile Center<br>
+      Brownsville, Brooklyn, NY<br>
+      <br>
+      <a href="mailto:max@crossroadsart.club">max@crossroadsart.club</a><br>
+      <a href="http://crossroadsart.club">crossroadsart.club</a><br>
+      <br>
+      Fiscally sponsored by Oyate Group &bull; EIN 82-3644288
+    </div>
+  </footer>
+
+</body>
+</html>
