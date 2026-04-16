@@ -481,6 +481,27 @@
       margin-top: 8px;
     }
 
+    /* PARTNERS */
+    .partners-grid {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      margin-top: 16px;
+    }
+
+    .partner-logo {
+      height: 60px;
+      width: auto;
+      max-width: 160px;
+      object-fit: contain;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+
+    .partner-logo:hover { opacity: 1; }
+
     /* FOOTER */
     footer {
       background: var(--ink);
@@ -544,6 +565,8 @@
       .stats-row { grid-template-columns: 1fr; }
       footer { grid-template-columns: 1fr; }
       .footer-info { text-align: left; }
+      .partners-grid { gap: 32px; }
+      .partner-logo { height: 48px; }
     }
   </style>
 </head>
@@ -670,6 +693,15 @@
         <p class="donate-note">@crossroadsartclub &bull; All donations go directly to the program</p>
         <p class="donate-note" style="margin-top: 8px;">For larger gifts or checks, contact us at <a href="mailto:max@crossroadsart.club" style="color: var(--rust);">max@crossroadsart.club</a></p>
       </div>
+    </div>
+  </section>
+
+  <!-- PARTNERS -->
+  <section id="partners">
+    <p class="section-label">Partners &amp; Sponsors</p>
+    <div class="partners-grid">
+      <!-- Add partner logos here, e.g.: -->
+      <!-- <img src="logo-filename.png" alt="Partner Name" class="partner-logo"> -->
     </div>
   </section>
 
