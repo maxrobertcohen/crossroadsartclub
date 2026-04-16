@@ -91,13 +91,33 @@
 
     /* HERO */
     .hero {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      padding: 100px 40px 60px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 0;
+      padding: 100px 0 0;
       border-bottom: 1.5px solid var(--ink);
       position: relative;
       overflow: hidden;
+      align-items: stretch;
+    }
+
+    .hero-text {
+      padding: 40px 40px 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .hero-image {
+      border-left: 1.5px solid var(--ink);
+      overflow: hidden;
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .hero-label {
@@ -111,12 +131,11 @@
 
     .hero h1 {
       font-family: 'Anton', sans-serif;
-      font-size: clamp(72px, 12vw, 180px);
+      font-size: clamp(52px, 8vw, 120px);
       line-height: 0.9;
       letter-spacing: -0.01em;
       text-transform: uppercase;
       color: var(--ink);
-      max-width: 900px;
     }
 
     .hero h1 em {
@@ -310,28 +329,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-
-    .comic-cover-placeholder {
-      text-align: center;
-      padding: 40px;
-    }
-
-    .comic-cover-placeholder .title {
-      font-family: 'Anton', sans-serif;
-      font-size: 36px;
-      text-transform: uppercase;
-      color: var(--cream);
-      line-height: 1;
-      margin-bottom: 12px;
-    }
-
-    .comic-cover-placeholder .subtitle {
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      color: #8FBF9F;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
     }
 
     .comic-content h2 {
@@ -559,7 +556,9 @@
     @media (max-width: 768px) {
       nav { padding: 16px 20px; }
       .nav-links { display: none; }
-      .hero { padding: 80px 20px 48px; }
+      .hero { grid-template-columns: 1fr; padding: 80px 0 0; }
+      .hero-text { padding: 40px 20px 48px; }
+      .hero-image { border-left: none; border-top: 1.5px solid var(--ink); height: 300px; }
       .hero-sub { grid-template-columns: 1fr; }
       .hero-meta { text-align: left; }
       section { padding: 60px 20px; }
@@ -589,18 +588,23 @@
 
   <!-- HERO -->
   <div class="hero">
-    <p class="hero-label">Brownsville, Brooklyn &mdash; Est. 2023</p>
-    <h1>Art <em>Club</em></h1>
-    <div class="hero-sub">
-      <p class="hero-desc">
-        A weekly art and music program for young people and their staff in pre-trial maximum security detention at the NYC ACS Crossroads Juvenile center. Communal studio time with live music to change people's lives.
-      </p>
-      <div class="hero-meta">
-        <strong>Jacob &amp; Max Cohen</strong>
-        Crossroads Juvenile Center<br>
-        Brownsville, Brooklyn<br>
-        Since October 2023
+    <div class="hero-text">
+      <p class="hero-label">Brownsville, Brooklyn &mdash; Est. 2023</p>
+      <h1>Crossroads <em>Art Club</em></h1>
+      <div class="hero-sub">
+        <p class="hero-desc">
+          A weekly art and music program for young people and their staff in pre-trial maximum security detention at the NYC ACS Crossroads Juvenile center. Communal studio time with live music to change people's lives.
+        </p>
+        <div class="hero-meta">
+          <strong>Jacob &amp; Max Cohen</strong>
+          Crossroads Juvenile Center<br>
+          Brownsville, Brooklyn<br>
+          Since October 2023
+        </div>
       </div>
+    </div>
+    <div class="hero-image">
+      <img src="Lily Plane.jpg" alt="Lily Plane">
     </div>
   </div>
 
