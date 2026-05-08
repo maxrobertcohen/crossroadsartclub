@@ -394,6 +394,18 @@
       transition: color 0.2s;
     }
 
+    .press-logo {
+      height: 28px;
+      width: auto;
+      max-width: 140px;
+      object-fit: contain;
+      display: block;
+      margin-bottom: 16px;
+      transition: filter 0.2s;
+    }
+
+    .press-item:hover .press-logo { filter: invert(1); }
+
     /* SUPPORT */
     .support-inner {
       display: grid;
@@ -659,12 +671,12 @@
     <p class="section-label">Press</p>
     <div class="press-grid">
       <a href="https://hellgatenyc.com/crossroads-art-club-show/" target="_blank" class="press-item">
-        <p class="press-pub">Hellgate NYC</p>
+        <img src="Hellgate Logo.svg" alt="Hellgate NYC" class="press-logo">
         <p class="press-headline">Inside the Crossroads Art Club Show</p>
         <p class="press-arrow">Read &rarr;</p>
       </a>
       <a href="https://epicenter-nyc.com/max-and-jacob-cohen-crossroads-art-club/" target="_blank" class="press-item">
-        <p class="press-pub">Epicenter NYC</p>
+        <img src="EpicenterNYC logo.webp" alt="Epicenter NYC" class="press-logo">
         <p class="press-headline">Max and Jacob Cohen: Crossroads Art Club</p>
         <p class="press-arrow">Read &rarr;</p>
       </a>
