@@ -357,10 +357,15 @@
       border: 1.5px solid var(--ink);
       text-decoration: none;
       color: var(--ink);
-      display: block;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 32px;
       transition: background 0.2s, color 0.2s;
       position: relative;
     }
+
+    .press-text { flex: 1; }
 
     .press-item:hover {
       background: var(--ink);
@@ -395,12 +400,11 @@
     }
 
     .press-logo {
-      height: 28px;
+      height: 84px;
       width: auto;
-      max-width: 140px;
+      max-width: 180px;
       object-fit: contain;
-      display: block;
-      margin-bottom: 16px;
+      flex-shrink: 0;
       transition: filter 0.2s;
     }
 
@@ -672,13 +676,17 @@
     <div class="press-grid">
       <a href="https://hellgatenyc.com/crossroads-art-club-show/" target="_blank" class="press-item">
         <img src="Hellgate Logo.svg" alt="Hellgate NYC" class="press-logo">
-        <p class="press-headline">Inside the Crossroads Art Club Show</p>
-        <p class="press-arrow">Read &rarr;</p>
+        <div class="press-text">
+          <p class="press-headline">Inside the Crossroads Art Club Show</p>
+          <p class="press-arrow">Read &rarr;</p>
+        </div>
       </a>
       <a href="https://epicenter-nyc.com/max-and-jacob-cohen-crossroads-art-club/" target="_blank" class="press-item">
         <img src="EpicenterNYC logo.webp" alt="Epicenter NYC" class="press-logo">
-        <p class="press-headline">Max and Jacob Cohen: Crossroads Art Club</p>
-        <p class="press-arrow">Read &rarr;</p>
+        <div class="press-text">
+          <p class="press-headline">Max and Jacob Cohen: Crossroads Art Club</p>
+          <p class="press-arrow">Read &rarr;</p>
+        </div>
       </a>
     </div>
   </section>
