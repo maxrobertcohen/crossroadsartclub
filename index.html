@@ -773,7 +773,7 @@
       </div>
       <a href="https://venmo.com/u/crossroadsartclub" target="_blank" rel="noopener noreferrer" class="donate-btn">Donate via Venmo</a>
       <p class="donate-note">@crossroadsartclub &bull; All donations go directly to the program</p>
-      <p class="donate-note">For larger tax deductible gifts contact us at <a href="mailto:max@crossroadsart.club">max@crossroadsart.club</a></p>
+      <p class="donate-note">For larger tax deductible gifts contact us at <span class="email" data-u="znk" data-d="pebffebnqfneg.pyho">max [at] crossroadsart [dot] club</span></p>
     </div>
   </section>
 
@@ -807,7 +807,7 @@
       <div class="footer-rule"></div>
       <p class="footer-info">
         Crossroads Juvenile Center &mdash; Brownsville, Brooklyn, NY<br>
-        <a href="mailto:max@crossroadsart.club">max@crossroadsart.club</a> &bull; <a href="http://crossroadsart.club">crossroadsart.club</a><br>
+        <span class="email" data-u="znk" data-d="pebffebnqfneg.pyho">max [at] crossroadsart [dot] club</span> &bull; <a href="http://crossroadsart.club">crossroadsart.club</a><br>
         Fiscally sponsored by Oyate Group &bull; EIN 82-3644288
       </p>
     </div>
@@ -824,6 +824,20 @@
     }, { threshold: 0.12 });
 
     document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+    // Address is stored ROT13-encoded and split so scrapers reading the
+    // markup never see a usable address; real visitors get a live mailto.
+    const rot13 = (s) => s.replace(/[a-z]/g, (c) =>
+      String.fromCharCode((c.charCodeAt(0) - 97 + 13) % 26 + 97));
+
+    document.querySelectorAll('.email').forEach((el) => {
+      const address = rot13(el.dataset.u) + String.fromCharCode(64) + rot13(el.dataset.d);
+      const link = document.createElement('a');
+      link.href = String.fromCharCode(109, 97, 105, 108, 116, 111, 58) + address;
+      link.textContent = address;
+      if (el.getAttribute('style')) link.setAttribute('style', el.getAttribute('style'));
+      el.replaceWith(link);
+    });
   </script>
 
 </body>
