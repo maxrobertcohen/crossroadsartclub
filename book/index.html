@@ -1,0 +1,151 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Nothing Is Assigned — Crossroads Art Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--night:#15110E;--night-2:#0B0908;--paper:#F6F0E4;--gold:#D9A441;--rose:#C97B5A;--hair:rgba(246,240,228,.14)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--night-2);color:var(--paper);font-family:'Inter',system-ui,sans-serif;
+  display:flex;flex-direction:column;overflow:hidden;
+  background-image:radial-gradient(ellipse at 50% 42%,#211a15 0%,#0B0908 72%)}
+header{display:flex;align-items:baseline;gap:1.1rem;padding:1.15rem 1.6rem .9rem;flex:0 0 auto}
+header .t{font-family:'Fraunces',serif;font-weight:200;font-size:1.18rem;letter-spacing:.01em}
+header .t em{font-style:italic;color:var(--gold)}
+header .k{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(246,240,228,.45)}
+header .spacer{flex:1}
+header a{color:rgba(246,240,228,.5);text-decoration:none;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase}
+header a:hover{color:var(--gold)}
+#stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:0 3.2rem}
+#flip{filter:drop-shadow(0 26px 70px rgba(0,0,0,.72))}
+.stf__parent{margin:0 auto;background:transparent}
+.stf__wrapper{background:transparent}
+/* every leaf, including the implicit blanks, is dark board not white paper */
+.stf__item{background:#0F0C0A}
+.pg{width:100%;height:100%;background:#0F0C0A;overflow:hidden}
+.pg img{width:100%;height:100%;object-fit:cover;display:block}
+footer{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:1.5rem;padding:1rem 1.6rem 1.5rem}
+button{background:none;border:1px solid var(--hair);color:rgba(246,240,228,.75);
+  width:2.6rem;height:2.6rem;border-radius:50%;cursor:pointer;font-size:1rem;line-height:1;
+  transition:all .25s;display:grid;place-items:center}
+button:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+button:disabled{opacity:.22;cursor:default}
+#counter{font-size:.68rem;letter-spacing:.24em;color:rgba(246,240,228,.5);min-width:6.5rem;text-align:center}
+#hint{position:absolute;bottom:.4rem;left:0;right:0;text-align:center;font-size:.6rem;
+  letter-spacing:.2em;text-transform:uppercase;color:rgba(246,240,228,.26);transition:opacity .6s}
+#loader{position:fixed;inset:0;background:var(--night-2);display:grid;place-items:center;z-index:20;transition:opacity .7s}
+#loader .inner{text-align:center}
+#loader .bar{width:11rem;height:1px;background:var(--hair);margin:1.1rem auto 0;overflow:hidden}
+#loader .bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+#loader .lbl{font-family:'Fraunces',serif;font-weight:200;font-size:1.5rem}
+#loader .lbl em{font-style:italic;color:var(--gold)}
+#loader .sub{font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;color:rgba(246,240,228,.4);margin-top:.7rem}
+@media(max-width:760px){#stage{padding:0 .7rem}header{padding:.9rem 1rem .6rem}header .k{display:none}}
+</style></head><body>
+
+<div id="loader"><div class="inner">
+  <div class="lbl">Nothing Is <em>Assigned</em></div>
+  <div class="sub">Crossroads Art Club</div>
+  <div class="bar"><i id="bar"></i></div>
+</div></div>
+
+<header>
+  <div class="t">Nothing Is <em>Assigned</em></div>
+  <div class="k">Crossroads Art Club</div>
+  <div class="spacer"></div>
+  <a href="../">Back to site</a>
+</header>
+
+<div id="stage">
+  <div id="flip"></div>
+  <div id="src" hidden></div>
+  <div id="hint">Drag a corner, click the edges, or use &larr; &rarr;</div>
+</div>
+
+<footer>
+  <button id="prev" aria-label="Previous page">&#8249;</button>
+  <div id="counter">Cover</div>
+  <button id="next" aria-label="Next page">&#8250;</button>
+</footer>
+
+<script src="https://unpkg.com/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<script>
+const N = 27;
+const urls = Array.from({length:N},(_,i)=>`pages/p${String(i+1).padStart(2,'0')}.png`);
+const bar = document.getElementById('bar');
+let loaded = 0;
+const src = document.getElementById('src');
+src.innerHTML = urls.map(u=>`<div class="pg"><img src="${u}" alt=""></div>`).join('');
+Promise.all(urls.map(u=>new Promise(res=>{
+  const im = new Image();
+  im.onload = im.onerror = ()=>{ loaded++; bar.style.width = (loaded/N*100)+'%'; res(); };
+  im.src = u;
+}))).then(start);
+
+function fit(){
+  const stage = document.getElementById('stage');
+  const availH = stage.clientHeight - 24;
+  const availW = stage.clientWidth - 24;
+  // two square pages side by side => 2:1
+  let h = Math.min(availH, availW/2) * 0.94;
+  return Math.max(240, Math.floor(h));
+}
+
+let pf;
+function start(){
+  const side = fit();
+  pf = new St.PageFlip(document.getElementById('flip'), {
+    width: side, height: side,
+    size: 'fixed',
+    showCover: true,
+    maxShadowOpacity: 0.5,
+    flippingTime: 780,
+    usePortrait: window.innerWidth < 760,
+    mobileScrollSupport: false,
+    drawShadow: true
+  });
+  pf.loadFromHTML(document.querySelectorAll('#src .pg'));
+  pf.on('flip', update);
+  window.pf = pf;
+  update();
+  document.getElementById('loader').style.opacity = 0;
+  setTimeout(()=>document.getElementById('loader').remove(), 750);
+  setTimeout(()=>{ const h=document.getElementById('hint'); if(h) h.style.opacity=0; }, 6500);
+}
+
+function update(){
+  const i = pf.getCurrentPageIndex();
+  const total = pf.getPageCount();
+  const c = document.getElementById('counter');
+  if (i === 0) c.textContent = 'Cover';
+  else if (i >= total-1) c.textContent = 'End';
+  else c.textContent = (i+1) + ' – ' + Math.min(i+2,total) + ' / ' + total;
+  document.getElementById('prev').disabled = i === 0;
+  document.getElementById('next').disabled = i >= total-1;
+}
+
+document.getElementById('prev').onclick = ()=>pf.flipPrev();
+document.getElementById('next').onclick = ()=>pf.flipNext();
+document.addEventListener('keydown', e=>{
+  if(!pf) return;
+  if(e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); pf.flipNext(); }
+  if(e.key==='ArrowLeft') { e.preventDefault(); pf.flipPrev(); }
+  if(e.key==='Home') pf.flip(0);
+  if(e.key==='End') pf.flip(pf.getPageCount()-1);
+});
+let rt;
+window.addEventListener('resize', ()=>{ clearTimeout(rt); rt=setTimeout(()=>{
+  if(!pf) return; const i=pf.getCurrentPageIndex();
+  const keep = document.getElementById('src').innerHTML;
+  document.getElementById('flip').innerHTML='';
+  document.getElementById('src').innerHTML = keep;
+  const side=fit();
+  pf = new St.PageFlip(document.getElementById('flip'), {width:side,height:side,size:'fixed',showCover:true,
+    maxShadowOpacity:.5,flippingTime:780,usePortrait:window.innerWidth<760,mobileScrollSupport:false,drawShadow:true});
+  pf.loadFromHTML(document.querySelectorAll('#src .pg')); pf.on('flip',update); pf.flip(i); update();
+},260); });
+</script>
+</body></html>
