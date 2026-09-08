@@ -12,14 +12,14 @@ html,body{height:100%}
 body{background:var(--night-2);color:var(--paper);font-family:'Inter',system-ui,sans-serif;
   display:flex;flex-direction:column;overflow:hidden;
   background-image:radial-gradient(ellipse at 50% 42%,#211a15 0%,#0B0908 72%)}
-header{display:flex;align-items:baseline;gap:1.1rem;padding:1.15rem 1.6rem .9rem;flex:0 0 auto}
+header{display:flex;align-items:baseline;gap:1.1rem;padding:.7rem 1.2rem .3rem;flex:0 0 auto}
 header .t{font-family:'Fraunces',serif;font-weight:200;font-size:1.18rem;letter-spacing:.01em}
 header .t em{font-style:italic;color:var(--gold)}
 header .k{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(246,240,228,.45)}
 header .spacer{flex:1}
 header a{color:rgba(246,240,228,.5);text-decoration:none;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase}
 header a:hover{color:var(--gold)}
-#stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:0 3.2rem}
+#stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:0 2.2rem}
 #flip{filter:drop-shadow(0 26px 70px rgba(0,0,0,.72))}
 .stf__parent{margin:0 auto;background:transparent}
 .stf__wrapper{background:transparent}
@@ -27,13 +27,14 @@ header a:hover{color:var(--gold)}
 .stf__item{background:#0F0C0A}
 .pg{width:100%;height:100%;background:#0F0C0A;overflow:hidden}
 .pg img{width:100%;height:100%;object-fit:cover;display:block}
-footer{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:1.5rem;padding:1rem 1.6rem 1.5rem}
+footer{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:1.5rem;padding:.7rem 1.6rem 1rem}
 button{background:none;border:1px solid var(--hair);color:rgba(246,240,228,.75);
   width:2.6rem;height:2.6rem;border-radius:50%;cursor:pointer;font-size:1rem;line-height:1;
   transition:all .25s;display:grid;place-items:center}
 button:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
 button:disabled{opacity:.22;cursor:default}
-#counter{font-size:.68rem;letter-spacing:.24em;color:rgba(246,240,228,.5);min-width:6.5rem;text-align:center}
+#counter{width:7rem;height:1px;background:var(--hair);position:relative}
+#counter::after{content:'';position:absolute;left:0;top:0;height:1px;width:var(--p,0%);background:var(--gold);transition:width .4s}
 #hint{position:absolute;bottom:.4rem;left:0;right:0;text-align:center;font-size:.6rem;
   letter-spacing:.2em;text-transform:uppercase;color:rgba(246,240,228,.26);transition:opacity .6s}
 #loader{position:fixed;inset:0;background:var(--night-2);display:grid;place-items:center;z-index:20;transition:opacity .7s}
@@ -47,34 +48,29 @@ button:disabled{opacity:.22;cursor:default}
 </style></head><body>
 
 <div id="loader"><div class="inner">
-  <div class="lbl">Crossroads <em>Art Club</em></div>
-  <div class="sub">The book</div>
   <div class="bar"><i id="bar"></i></div>
 </div></div>
 
 <header>
-  <div class="t">Crossroads <em>Art Club</em></div>
-  <div class="k">The book</div>
   <div class="spacer"></div>
-  <a href="../">Back to site</a>
+  <a href="../" aria-label="Back to site">&#8592;</a>
 </header>
 
 <div id="stage">
   <div id="flip"></div>
   <div id="src" hidden></div>
-  <div id="hint">Drag a corner, click the edges, or use &larr; &rarr;</div>
 </div>
 
 <footer>
   <button id="prev" aria-label="Previous page">&#8249;</button>
-  <div id="counter">Cover</div>
+  <div id="counter"></div>
   <button id="next" aria-label="Next page">&#8250;</button>
 </footer>
 
 <script src="https://unpkg.com/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 <script>
-const N = 49;
-const urls = Array.from({length:N},(_,i)=>`pages/p${String(i+1).padStart(2,'0')}.jpg`);
+const N = 57;
+const urls = Array.from({length:N},(_,i)=>`pages/p${String(i).padStart(2,'0')}.jpg`);
 const bar = document.getElementById('bar');
 let loaded = 0;
 const src = document.getElementById('src');
@@ -90,7 +86,7 @@ function fit(){
   const availH = stage.clientHeight - 24;
   const availW = stage.clientWidth - 24;
   // two square pages side by side => 2:1
-  let h = Math.min(availH, availW/2) * 0.94;
+  let h = Math.min(availH, availW/2) * 0.99;
   return Math.max(240, Math.floor(h));
 }
 
@@ -120,9 +116,7 @@ function update(){
   const i = pf.getCurrentPageIndex();
   const total = pf.getPageCount();
   const c = document.getElementById('counter');
-  if (i === 0) c.textContent = 'Cover';
-  else if (i >= total-1) c.textContent = 'End';
-  else c.textContent = (i+1) + ' – ' + Math.min(i+2,total) + ' / ' + total;
+  c.style.setProperty('--p', ((i)/(total-1)*100)+'%');
   document.getElementById('prev').disabled = i === 0;
   document.getElementById('next').disabled = i >= total-1;
 }
