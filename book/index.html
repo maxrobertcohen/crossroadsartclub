@@ -6,41 +6,39 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--night:#15110E;--night-2:#0B0908;--paper:#F6F0E4;--gold:#D9A441;--rose:#C97B5A;--hair:rgba(246,240,228,.14)}
+:root{--ink:#15110E;--paper:#ffffff;--gold:#D9A441;--hair:rgba(21,17,14,.16)}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%}
-body{background:var(--night-2);color:var(--paper);font-family:'Inter',system-ui,sans-serif;
-  display:flex;flex-direction:column;overflow:hidden;
-  background-image:radial-gradient(ellipse at 50% 42%,#211a15 0%,#0B0908 72%)}
+body{background:#fff;color:var(--ink);font-family:'Inter',system-ui,sans-serif;
+  display:flex;flex-direction:column;overflow:hidden}
 header{display:flex;align-items:baseline;gap:1.1rem;padding:.7rem 1.2rem .3rem;flex:0 0 auto}
 header .t{font-family:'Fraunces',serif;font-weight:200;font-size:1.18rem;letter-spacing:.01em}
 header .t em{font-style:italic;color:var(--gold)}
 header .k{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(246,240,228,.45)}
 header .spacer{flex:1}
-header a{color:rgba(246,240,228,.5);text-decoration:none;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase}
-header a:hover{color:var(--gold)}
+header a{color:rgba(21,17,14,.45);text-decoration:none;font-size:1.5rem;line-height:1;padding:.2rem .4rem}
+header a:hover{color:var(--ink)}
 #stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:0 2.2rem}
-#flip{filter:drop-shadow(0 26px 70px rgba(0,0,0,.72))}
+#flip{filter:drop-shadow(0 18px 46px rgba(0,0,0,.22))}
 .stf__parent{margin:0 auto;background:transparent}
 .stf__wrapper{background:transparent}
 /* every leaf, including the implicit blanks, is dark board not white paper */
-.stf__item{background:#0F0C0A}
-.pg{width:100%;height:100%;background:#0F0C0A;overflow:hidden}
+.stf__item{background:#fff}
+.pg{width:100%;height:100%;background:#fff;overflow:hidden}
 .pg img{width:100%;height:100%;object-fit:cover;display:block}
-footer{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:1.5rem;padding:.7rem 1.6rem 1rem}
-button{background:none;border:1px solid var(--hair);color:rgba(246,240,228,.75);
-  width:2.6rem;height:2.6rem;border-radius:50%;cursor:pointer;font-size:1rem;line-height:1;
-  transition:all .25s;display:grid;place-items:center}
-button:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
-button:disabled{opacity:.22;cursor:default}
-#counter{width:7rem;height:1px;background:var(--hair);position:relative}
-#counter::after{content:'';position:absolute;left:0;top:0;height:1px;width:var(--p,0%);background:var(--gold);transition:width .4s}
+footer{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:2.4rem;padding:.4rem 1.6rem .9rem}
+button{background:none;border:0;color:var(--ink);width:4.4rem;height:4.4rem;cursor:pointer;
+  font-size:3.4rem;line-height:1;transition:opacity .2s;display:grid;place-items:center;opacity:.65}
+button:hover:not(:disabled){opacity:1}
+button:disabled{opacity:.14;cursor:default}
+#counter{width:9rem;height:2px;background:rgba(21,17,14,.12);position:relative}
+#counter::after{content:'';position:absolute;left:0;top:0;height:2px;width:var(--p,0%);background:var(--ink);transition:width .4s}
 #hint{position:absolute;bottom:.4rem;left:0;right:0;text-align:center;font-size:.6rem;
   letter-spacing:.2em;text-transform:uppercase;color:rgba(246,240,228,.26);transition:opacity .6s}
-#loader{position:fixed;inset:0;background:var(--night-2);display:grid;place-items:center;z-index:20;transition:opacity .7s}
+#loader{position:fixed;inset:0;background:#fff;display:grid;place-items:center;z-index:20;transition:opacity .7s}
 #loader .inner{text-align:center}
-#loader .bar{width:11rem;height:1px;background:var(--hair);margin:1.1rem auto 0;overflow:hidden}
-#loader .bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+#loader .bar{width:11rem;height:2px;background:rgba(21,17,14,.14);margin:1.1rem auto 0;overflow:hidden}
+#loader .bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .3s}
 #loader .lbl{font-family:'Fraunces',serif;font-weight:200;font-size:1.5rem}
 #loader .lbl em{font-style:italic;color:var(--gold)}
 #loader .sub{font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;color:rgba(246,240,228,.4);margin-top:.7rem}
@@ -53,7 +51,7 @@ button:disabled{opacity:.22;cursor:default}
 
 <header>
   <div class="spacer"></div>
-  <a href="../" aria-label="Back to site">&#8592;</a>
+  <a href="../" aria-label="Back to site">&#10005;</a>
 </header>
 
 <div id="stage">
@@ -62,9 +60,9 @@ button:disabled{opacity:.22;cursor:default}
 </div>
 
 <footer>
-  <button id="prev" aria-label="Previous page">&#8249;</button>
+  <button id="prev" aria-label="Previous page">&#8592;</button>
   <div id="counter"></div>
-  <button id="next" aria-label="Next page">&#8250;</button>
+  <button id="next" aria-label="Next page">&#8594;</button>
 </footer>
 
 <script src="https://unpkg.com/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
@@ -97,7 +95,7 @@ function start(){
     width: side, height: side,
     size: 'fixed',
     showCover: true,
-    maxShadowOpacity: 0.5,
+    maxShadowOpacity: 0.22,
     flippingTime: 780,
     usePortrait: window.innerWidth < 760,
     mobileScrollSupport: false,
