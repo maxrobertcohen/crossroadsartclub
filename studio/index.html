@@ -19,6 +19,9 @@ button:hover,label.btn:hover{border-color:#999}
 button:disabled{opacity:.35;cursor:default}
 button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
 button.on{background:var(--sel);color:#fff;border-color:var(--sel)}
+#swatch{width:2.1rem;height:1.9rem;padding:1px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer}
+body.picking .leaf,body.picking .it{cursor:crosshair}
+body.picking #stage{outline:2px solid var(--sel);outline-offset:-2px}
 #ovl .h.edge{background:var(--sel);border-color:#fff;width:26px;height:10px;border-radius:5px}
 #ovl .h.edge.n,#ovl .h.edge.s{width:26px;height:10px;cursor:ns-resize}
 #ovl .h.edge.e,#ovl .h.edge.w{width:10px;height:26px;cursor:ew-resize}
@@ -81,6 +84,11 @@ h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;font-
     <button id="centre">Centre</button>
     <button id="crop" title="Trim the edges of the selected image">Crop</button>
     <button id="uncrop" title="Undo the trim">Reset crop</button>
+    <span style="width:8px"></span>
+    <button id="pick" title="Sample a colour from an image, then fill the page behind it">Sample colour</button>
+    <input type="color" id="swatch" value="#000000" title="Background colour">
+    <button id="fillbg" title="Paint this page's background">Fill background</button>
+    <button id="clearbg" title="Back to white">White</button>
     <button id="rotl" title="Rotate left">&#8630;</button>
     <button id="rotr" title="Rotate right">&#8631;</button>
     <button id="front">Bring front</button>
@@ -196,6 +204,7 @@ function render(noSnap){
     if (pi===null){ d.classList.add('empty-slot'); d.style.width=pw+'px'; d.style.height=ph+'px';
                     wrap.appendChild(d); stage.appendChild(wrap); return; }
     d.style.width=pw+'px'; d.style.height=ph+'px'; d.dataset.p=pi;
+    d.style.background = BOOK.pages[pi].bg || '#fff';
     const t = document.createElement('div'); t.className='tag';
     t.textContent = (BOOK.pages[pi].role==='Page') ? 'Page '+(pi-1) : BOOK.pages[pi].role;
     wrap.appendChild(t);
@@ -228,6 +237,8 @@ function render(noSnap){
   document.getElementById('where').textContent =
     (view===0?'Front cover':view===sp.length-1?'Back cover':'Spread '+view+' of '+(sp.length-2));
   showDpi();
+  const cp=currentFirstPage();
+  if(cp!==undefined && BOOK.pages[cp].bg) document.getElementById('swatch').value=BOOK.pages[cp].bg;
   document.getElementById('prev').disabled = view===0;
   document.getElementById('next').disabled = view===sp.length-1;
   document.querySelectorAll('.cell').forEach(c=>c.classList.toggle('used', used().has(c.dataset.id)));
@@ -339,6 +350,19 @@ stage.addEventListener('drop',e=>{
 let drag=null;
 document.addEventListener('pointerdown',e=>{
   if(!e.target.closest('#stage') && !e.target.closest('#ovl')) return;
+  if(PICK){
+    const el=e.target.closest('.it');
+    if(el){
+      const col=sampleAt(el, e.clientX, e.clientY);
+      if(col){
+        document.getElementById('swatch').value=col;
+        BOOK.pages[+el.dataset.p].bg=col;
+        setPick(false); render();
+        setHint('Filled with '+col+'. Use Fill background to put the same colour on another page.');
+      }
+    }
+    e.preventDefault(); return;
+  }
   if(ARMED){
     const l=e.target.closest('.leaf');
     if(l&&l.dataset.p){
@@ -410,6 +434,35 @@ stage.addEventListener('wheel',e=>{
   it.x=cx-(cx-it.x)*(nw/it.w); it.y=cy-(cy-it.y)*(nh/it.h); it.w=nw; it.h=nh;
   render();
 },{passive:false});
+
+/* ---------------- colour sampling ---------------- */
+let PICK=false;
+function setPick(on){ PICK=on; document.body.classList.toggle('picking',on);
+  document.getElementById('pick').classList.toggle('on',on);
+  setHint(on?'Tap anywhere on an image to take its colour — the page behind it fills with that colour.':null); }
+function sampleAt(el, clientX, clientY){
+  const p=+el.dataset.p, i=+el.dataset.i, it=BOOK.pages[p].items[i];
+  const img=el.querySelector('img'); if(!img || !img.naturalWidth) return null;
+  const b=el.getBoundingClientRect();
+  const u=(clientX-b.left)/b.width, v=(clientY-b.top)/b.height;      // inside the visible frame
+  const cr=it.crop||{x:0,y:0,w:1,h:1};
+  const su=cr.x+u*cr.w, sv=cr.y+v*cr.h;                              // inside the rotated picture
+  const sw=img.naturalWidth, sh=img.naturalHeight, rot=it.rot||0;
+  const cw=(rot%180)?sh:sw, ch=(rot%180)?sw:sh;
+  const c=document.createElement('canvas'); c.width=cw; c.height=ch;
+  const g=c.getContext('2d', {willReadFrequently:true});
+  g.translate(cw/2,ch/2); g.rotate(rot*Math.PI/180); g.drawImage(img,-sw/2,-sh/2);
+  const x=Math.max(0,Math.min(cw-1,Math.round(su*cw))), y=Math.max(0,Math.min(ch-1,Math.round(sv*ch)));
+  const d=g.getImageData(x,y,1,1).data;
+  return '#'+[d[0],d[1],d[2]].map(n=>n.toString(16).padStart(2,'0')).join('');
+}
+document.getElementById('pick').onclick=()=>setPick(!PICK);
+document.getElementById('fillbg').onclick=()=>{ const p=currentFirstPage(); if(p===undefined) return;
+  BOOK.pages[p].bg=document.getElementById('swatch').value; render(); };
+document.getElementById('clearbg').onclick=()=>{ const p=currentFirstPage(); if(p===undefined) return;
+  delete BOOK.pages[p].bg; render(); };
+document.getElementById('swatch').oninput=e=>{ const p=currentFirstPage();
+  if(p!==undefined){ BOOK.pages[p].bg=e.target.value; render(); } };
 
 /* ---------------- toolbar ---------------- */
 const selItem = () => sel ? BOOK.pages[sel.p].items[sel.i] : null;
@@ -497,7 +550,9 @@ document.getElementById('pdf').onclick=async()=>{
   for(let p=0;p<BOOK.pages.length;p++){
     btn.textContent='Exporting '+(p+1)+'/'+BOOK.pages.length;
     if(p) doc.addPage([W,H], W>H?'landscape':'portrait');
-    doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+    const bg=BOOK.pages[p].bg||'#ffffff';
+    doc.setFillColor(parseInt(bg.slice(1,3),16),parseInt(bg.slice(3,5),16),parseInt(bg.slice(5,7),16));
+    doc.rect(0,0,W,H,'F');
     for(const it of BOOK.pages[p].items){
       const src='img/'+it.img+'.jpg';
       cache[src] = cache[src] || await loadImg(src);
