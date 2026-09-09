@@ -18,6 +18,10 @@ button,select,label.btn{font:inherit;background:#fff;border:1px solid var(--line
 button:hover,label.btn:hover{border-color:#999}
 button:disabled{opacity:.35;cursor:default}
 button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.on{background:var(--sel);color:#fff;border-color:var(--sel)}
+#ovl .h.edge{background:var(--sel);border-color:#fff;width:26px;height:10px;border-radius:5px}
+#ovl .h.edge.n,#ovl .h.edge.s{width:26px;height:10px;cursor:ns-resize}
+#ovl .h.edge.e,#ovl .h.edge.w{width:10px;height:26px;cursor:ew-resize}
 #where{font-variant-numeric:tabular-nums;min-width:12rem;text-align:center;color:#666}
 #dpi{font-variant-numeric:tabular-nums;font-size:12px;color:#666;min-width:5.2rem;text-align:center}
 #dpi.low{color:#b23; font-weight:600}
@@ -34,7 +38,7 @@ button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
 .h{position:absolute;width:14px;height:14px;background:#fff;border:1.5px solid var(--sel);border-radius:3px;
    transform:translate(-50%,-50%);z-index:9;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .h.nw{cursor:nwse-resize}.h.ne{cursor:nesw-resize}.h.sw{cursor:nesw-resize}.h.se{cursor:nwse-resize}
-#ovl{position:absolute;inset:0;pointer-events:none}
+#ovl{position:fixed;inset:0;pointer-events:none;z-index:50}
 #ovl .h{pointer-events:auto}
 #ovl .box{position:absolute;outline:1.5px solid var(--sel);pointer-events:none}
 #stage{position:relative}
@@ -75,6 +79,8 @@ h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;font-
     <button id="fill" title="Make the selected image cover the page">Fill page</button>
     <button id="fit" title="Fit the whole image on the page">Fit page</button>
     <button id="centre">Centre</button>
+    <button id="crop" title="Trim the edges of the selected image">Crop</button>
+    <button id="uncrop" title="Undo the trim">Reset crop</button>
     <button id="rotl" title="Rotate left">&#8630;</button>
     <button id="rotr" title="Rotate right">&#8631;</button>
     <button id="front">Bring front</button>
@@ -119,7 +125,7 @@ h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;font-
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 const KEY='cac-book-layout-v1';
-let MAN=null, BOOK=null, view=0, sel=null, ARMED=null;
+let MAN=null, BOOK=null, view=0, sel=null, ARMED=null, CROP=false;
 const HINT='Drag an image onto a page — or tap an image, then tap a page. Corners or scroll wheel resize · \u2318Z undo. Export is proof quality; ask Claude for the 300 dpi print master.';
 function setHint(t){ const h=document.getElementById('hint'); if(h) h.textContent=t||HINT; }   // sel = {p:pageIndex, i:itemIndex}
 const byId = id => MAN.byId[id];
@@ -133,16 +139,21 @@ async function boot(){
   normalise();
   buildGrid(); render(); setHint(); requestAnimationFrame(()=>render(true));
 }
-function aspect(im, rot){ return (rot%180) ? im.h/im.w : im.w/im.h; }
-function coverRect(im, rot){                       // fill the page, keep aspect
-  const a = aspect(im, rot||0);                        // page is w×h units of 1
+function aspect(im, rot, crop){
+  const c = crop || {w:1,h:1};
+  const w = (rot%180) ? im.h*c.h : im.w*c.w;
+  const h = (rot%180) ? im.w*c.w : im.h*c.h;
+  return w/h;
+}
+function coverRect(im, rot, crop){                 // fill the page, keep aspect
+  const a = aspect(im, rot||0, crop);                        // page is w×h units of 1
   const pa = BOOK.trim[0]/BOOK.trim[1];
   let w,h;
   if (a > pa){ h = 1; w = a/pa; } else { w = 1; h = pa/a; }
   return {x:(1-w)/2, y:(1-h)/2, w, h};
 }
-function fitRect(im, rot){
-  const a = aspect(im, rot||0), pa = BOOK.trim[0]/BOOK.trim[1];
+function fitRect(im, rot, crop){
+  const a = aspect(im, rot||0, crop), pa = BOOK.trim[0]/BOOK.trim[1];
   let w,h;
   if (a > pa){ w = 1; h = pa/a; } else { h = 1; w = a/pa; }
   return {x:(1-w)/2, y:(1-h)/2, w, h};
@@ -192,20 +203,28 @@ function render(noSnap){
       const el = document.createElement('div'); el.className='it'+((sel&&sel.p===pi&&sel.i===ii)?' sel':'');
       el.style.left=(it.x*100)+'%'; el.style.top=(it.y*100)+'%';
       el.style.width=(it.w*100)+'%'; el.style.height=(it.h*100)+'%';
+      el.style.overflow='hidden';
+      const cr = it.crop || {x:0,y:0,w:1,h:1};
+      const rectW = it.w*pw, rectH = it.h*ph;
+      const boxW = rectW/cr.w, boxH = rectH/cr.h;
+      const box = document.createElement('div');
+      box.style.position='absolute'; box.style.overflow='hidden';
+      box.style.left=(-cr.x*boxW)+'px'; box.style.top=(-cr.y*boxH)+'px';
+      box.style.width=boxW+'px'; box.style.height=boxH+'px';
       const im = document.createElement('img'); im.src='img/'+it.img+'.jpg';
       if (it.rot){
-        el.style.overflow='hidden';
         im.style.position='absolute'; im.style.left='50%'; im.style.top='50%';
-        if (it.rot%180){ im.style.width=(it.h*ph)+'px'; im.style.height=(it.w*pw)+'px'; }
+        if (it.rot%180){ im.style.width=boxH+'px'; im.style.height=boxW+'px'; }
         else { im.style.width='100%'; im.style.height='100%'; }
         im.style.transform='translate(-50%,-50%) rotate('+it.rot+'deg)';
-      }
-      el.appendChild(im);
+      } else { im.style.width='100%'; im.style.height='100%'; }
+      box.appendChild(im); el.appendChild(box);
       el.dataset.p=pi; el.dataset.i=ii; d.appendChild(el);
     });
     wrap.appendChild(d); stage.appendChild(wrap);
   });
-  const ovl=document.createElement('div'); ovl.id='ovl'; stage.appendChild(ovl); drawOverlay();
+  if(!document.getElementById('ovl')){ const o=document.createElement('div'); o.id='ovl'; document.body.appendChild(o); }
+  drawOverlay();
   document.getElementById('where').textContent =
     (view===0?'Front cover':view===sp.length-1?'Back cover':'Spread '+view+' of '+(sp.length-2));
   showDpi();
@@ -219,22 +238,35 @@ function drawOverlay(){
   const ovl=document.getElementById('ovl'); if(!ovl) return; ovl.innerHTML='';
   if(!sel) return;
   const el=document.querySelector(`.it[data-p="${sel.p}"][data-i="${sel.i}"]`); if(!el) return;
-  const sb=document.getElementById('stage').getBoundingClientRect(), b=el.getBoundingClientRect();
+  const b=el.getBoundingClientRect();
   const box=document.createElement('div'); box.className='box';
-  box.style.left=(b.left-sb.left)+'px'; box.style.top=(b.top-sb.top)+'px';
+  box.style.left=b.left+'px'; box.style.top=b.top+'px';
   box.style.width=b.width+'px'; box.style.height=b.height+'px'; ovl.appendChild(box);
-  const pts={nw:[b.left,b.top],ne:[b.right,b.top],sw:[b.left,b.bottom],se:[b.right,b.bottom]};
-  for(const c in pts){
-    const h=document.createElement('div'); h.className='h '+c; h.dataset.corner=c;
-    h.dataset.p=sel.p; h.dataset.i=sel.i;
-    h.style.left=(pts[c][0]-sb.left)+'px'; h.style.top=(pts[c][1]-sb.top)+'px';
-    ovl.appendChild(h);
+  if(CROP){
+    const pts={n:[(b.left+b.right)/2,b.top],s:[(b.left+b.right)/2,b.bottom],
+               w:[b.left,(b.top+b.bottom)/2],e:[b.right,(b.top+b.bottom)/2]};
+    for(const c in pts){
+      const h=document.createElement('div'); h.className='h edge '+c; h.dataset.edge=c;
+      h.dataset.p=sel.p; h.dataset.i=sel.i;
+      h.style.left=pts[c][0]+'px'; h.style.top=pts[c][1]+'px';
+      ovl.appendChild(h);
+    }
+  } else {
+    const pts={nw:[b.left,b.top],ne:[b.right,b.top],sw:[b.left,b.bottom],se:[b.right,b.bottom]};
+    for(const c in pts){
+      const h=document.createElement('div'); h.className='h '+c; h.dataset.corner=c;
+      h.dataset.p=sel.p; h.dataset.i=sel.i;
+      h.style.left=pts[c][0]+'px'; h.style.top=pts[c][1]+'px';
+      ovl.appendChild(h);
+    }
   }
 }
 function itemDpi(it){
   const im=byId(it.img); if(!im) return null;
   const [tw,th]=BOOK.trim;
-  return Math.round(Math.min(im.ow/(Math.abs(it.w)*tw), im.oh/(Math.abs(it.h)*th)));
+  const cr=it.crop||{w:1,h:1};
+  const sw=(it.rot%180)? im.oh*cr.w : im.ow*cr.w, sh=(it.rot%180)? im.ow*cr.h : im.oh*cr.h;
+  return Math.round(Math.min(sw/(Math.abs(it.w)*tw), sh/(Math.abs(it.h)*th)));
 }
 function showDpi(){
   const el=document.getElementById('dpi'); if(!el) return;
@@ -305,7 +337,8 @@ stage.addEventListener('drop',e=>{
   placeOn(+l.dataset.p, id, {x:(e.clientX-b.left)/b.width, y:(e.clientY-b.top)/b.height});
 });
 let drag=null;
-stage.addEventListener('pointerdown',e=>{
+document.addEventListener('pointerdown',e=>{
+  if(!e.target.closest('#stage') && !e.target.closest('#ovl')) return;
   if(ARMED){
     const l=e.target.closest('.leaf');
     if(l&&l.dataset.p){
@@ -321,7 +354,8 @@ stage.addEventListener('pointerdown',e=>{
   const p=+el.dataset.p, i=+el.dataset.i, it=BOOK.pages[p].items[i];
   sel={p,i};
   const leaf=el.closest('.leaf'), b=leaf.getBoundingClientRect();
-  drag={p,i,corner:h?h.dataset.corner:null,b,sx:e.clientX,sy:e.clientY,o:{...it}};
+  drag={p,i,corner:h?h.dataset.corner:null,edge:h?h.dataset.edge:null,b,
+        sx:e.clientX,sy:e.clientY,o:{...it, crop:{...(it.crop||{x:0,y:0,w:1,h:1})}}};
   el.setPointerCapture?.(e.pointerId);
   render(); e.preventDefault();
 });
@@ -329,6 +363,21 @@ window.addEventListener('pointermove',e=>{
   if(!drag) return;
   const it=BOOK.pages[drag.p].items[drag.i], o=drag.o;
   const dx=(e.clientX-drag.sx)/drag.b.width, dy=(e.clientY-drag.sy)/drag.b.height;
+  if(drag.edge){
+    const cr={...o.crop};
+    let x=o.x,y=o.y,w=o.w,h=o.h;
+    if(drag.edge==='w'){ const d=Math.min(dx,o.w*.95); w=o.w-d; x=o.x+d; cr.x=o.crop.x+(d/o.w)*o.crop.w; cr.w=o.crop.w*(w/o.w); }
+    if(drag.edge==='e'){ const d=Math.max(dx,-o.w*.95); w=o.w+d; cr.w=o.crop.w*(w/o.w); }
+    if(drag.edge==='n'){ const d=Math.min(dy,o.h*.95); h=o.h-d; y=o.y+d; cr.y=o.crop.y+(d/o.h)*o.crop.h; cr.h=o.crop.h*(h/o.h); }
+    if(drag.edge==='s'){ const d=Math.max(dy,-o.h*.95); h=o.h+d; cr.h=o.crop.h*(h/o.h); }
+    // never run past the edge of the photograph
+    if(cr.x<0){ const k=-cr.x; cr.w-=k; cr.x=0; x+=k/o.crop.w*o.w; w-=k/o.crop.w*o.w; }
+    if(cr.y<0){ const k=-cr.y; cr.h-=k; cr.y=0; y+=k/o.crop.h*o.h; h-=k/o.crop.h*o.h; }
+    if(cr.x+cr.w>1){ const k=cr.x+cr.w-1; cr.w-=k; w-=k/o.crop.w*o.w; }
+    if(cr.y+cr.h>1){ const k=cr.y+cr.h-1; cr.h-=k; h-=k/o.crop.h*o.h; }
+    it.x=x; it.y=y; it.w=Math.max(.02,w); it.h=Math.max(.02,h); it.crop=cr;
+    render(true); return;
+  }
   if(!drag.corner){ it.x=o.x+dx; it.y=o.y+dy; }
   else{
     const ar=o.w/o.h;
@@ -366,11 +415,22 @@ stage.addEventListener('wheel',e=>{
 const selItem = () => sel ? BOOK.pages[sel.p].items[sel.i] : null;
 document.getElementById('prev').onclick=()=>{view--;sel=null;render();};
 document.getElementById('next').onclick=()=>{view++;sel=null;render();};
-document.getElementById('fill').onclick=()=>{const it=selItem(); if(it){Object.assign(it,coverRect(byId(it.img),it.rot));render();}};
-document.getElementById('fit').onclick=()=>{const it=selItem(); if(it){Object.assign(it,fitRect(byId(it.img),it.rot));render();}};
+document.getElementById('fill').onclick=()=>{const it=selItem(); if(it){Object.assign(it,coverRect(byId(it.img),it.rot,it.crop));render();}};
+document.getElementById('fit').onclick=()=>{const it=selItem(); if(it){Object.assign(it,fitRect(byId(it.img),it.rot,it.crop));render();}};
+document.getElementById('crop').onclick=()=>{ CROP=!CROP; document.getElementById('crop').classList.toggle('on',CROP);
+  setHint(CROP?'Crop mode: drag the blue bars to trim an edge. Tap Crop again to go back to moving and sizing.':null); render(true); };
+document.getElementById('uncrop').onclick=()=>{ const it=selItem(); if(!it) return;
+  const cr=it.crop||{x:0,y:0,w:1,h:1};
+  it.crop={x:0,y:0,w:1,h:1};
+  it.w=it.w/cr.w; it.h=it.h/cr.h; it.x=it.x-cr.x*it.w; it.y=it.y-cr.y*it.h;
+  render(); };
 function rotate(dir){ const it=selItem(); if(!it) return;
+  const cr=it.crop; 
+  if(cr){ // spin the crop window with the picture
+    it.crop = dir>0 ? {x:1-cr.y-cr.h, y:cr.x, w:cr.h, h:cr.w} : {x:cr.y, y:1-cr.x-cr.w, w:cr.h, h:cr.w};
+  }
   it.rot=((it.rot||0)+dir+360)%360;
-  const c={x:it.x+it.w/2,y:it.y+it.h/2}, a=aspect(byId(it.img),it.rot), pa=BOOK.trim[0]/BOOK.trim[1];
+  const c={x:it.x+it.w/2,y:it.y+it.h/2}, a=aspect(byId(it.img),it.rot,it.crop), pa=BOOK.trim[0]/BOOK.trim[1];
   const area=it.w*it.h; let w=Math.sqrt(area*a/pa), h=area/w;
   it.w=w; it.h=h; it.x=c.x-w/2; it.y=c.y-h/2; render();
 }
@@ -453,6 +513,19 @@ document.getElementById('pdf').onclick=async()=>{
           cache[key]=c;
         }
         im=cache[key];
+      }
+      const cr0=it.crop;
+      if (cr0 && (cr0.x||cr0.y||cr0.w<1||cr0.h<1)){
+        const key2=src+'#'+(it.rot||0)+'#'+[cr0.x,cr0.y,cr0.w,cr0.h].map(n=>n.toFixed(4)).join(',');
+        if(!cache[key2]){
+          const sw=im.naturalWidth||im.width, sh=im.naturalHeight||im.height;
+          const c=document.createElement('canvas');
+          c.width=Math.max(1,Math.round(sw*cr0.w)); c.height=Math.max(1,Math.round(sh*cr0.h));
+          c.getContext('2d').drawImage(im, Math.round(cr0.x*sw), Math.round(cr0.y*sh),
+                                       c.width, c.height, 0, 0, c.width, c.height);
+          cache[key2]=c;
+        }
+        im=cache[key2];
       }
       let x=it.x*tw+bleed, y=it.y*th+bleed, w=it.w*tw, h=it.h*th;
       if(bleed){   // grow anything that runs to the trim edge out into the bleed
