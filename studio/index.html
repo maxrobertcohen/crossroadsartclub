@@ -1,0 +1,406 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Book layout</title>
+<style>
+:root{--ink:#15110E;--line:rgba(21,17,14,.14);--sel:#2f6fed;--bg:#fff;--panel:#fafafa}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+     display:flex;flex-direction:column;overflow:hidden}
+
+/* ---------- top: the book ---------- */
+#top{flex:1 1 58%;display:flex;flex-direction:column;min-height:0;border-bottom:1px solid var(--line)}
+#bar{display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#bar .grow{flex:1}
+button,select,label.btn{font:inherit;background:#fff;border:1px solid var(--line);border-radius:7px;
+  padding:.34rem .6rem;cursor:pointer;color:var(--ink)}
+button:hover,label.btn:hover{border-color:#999}
+button:disabled{opacity:.35;cursor:default}
+button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+#where{font-variant-numeric:tabular-nums;min-width:12rem;text-align:center;color:#666}
+#stage{flex:1;display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;min-height:0;background:var(--panel)}
+.leaf{position:relative;background:#fff;box-shadow:0 6px 22px rgba(0,0,0,.13);overflow:hidden;flex:0 0 auto}
+.leaf.empty-slot{box-shadow:none;background:transparent}
+.wrap{position:relative;flex:0 0 auto}
+.wrap .tag{position:absolute;top:-1.15rem;left:0;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#999;white-space:nowrap}
+.leaf.drop{outline:2px dashed var(--sel);outline-offset:-2px}
+.it{position:absolute;cursor:move}
+.it img{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
+.it.sel{outline:1.5px solid var(--sel)}
+.h{position:absolute;width:14px;height:14px;background:#fff;border:1.5px solid var(--sel);border-radius:3px;
+   transform:translate(-50%,-50%);z-index:9;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.h.nw{cursor:nwse-resize}.h.ne{cursor:nesw-resize}.h.sw{cursor:nesw-resize}.h.se{cursor:nwse-resize}
+#ovl{position:absolute;inset:0;pointer-events:none}
+#ovl .h{pointer-events:auto}
+#ovl .box{position:absolute;outline:1.5px solid var(--sel);pointer-events:none}
+#stage{position:relative}
+
+/* ---------- bottom: the archive ---------- */
+#bottom{flex:1 1 42%;display:flex;flex-direction:column;min-height:0}
+#bbar{display:flex;align-items:center;gap:.5rem;padding:.5rem .8rem;border-bottom:1px solid var(--line)}
+#q{flex:1;max-width:22rem;padding:.34rem .55rem;border:1px solid var(--line);border-radius:7px;font:inherit}
+#grid{flex:1;overflow:auto;padding:.6rem .8rem 2rem}
+h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;font-weight:600;margin:.9rem 0 .45rem}
+.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.cell{aspect-ratio:1;background:#f1f1f1;border-radius:5px;overflow:hidden;cursor:grab;position:relative}
+.cell img{width:100%;height:100%;object-fit:cover;display:block}
+.cell.used::after{content:'';position:absolute;right:5px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--sel)}
+#hint{padding:.3rem .8rem;color:#999;font-size:12px}
+@media(max-width:820px){#stage{padding:8px;gap:8px}}
+</style></head><body>
+
+<div id="top">
+  <div id="bar">
+    <button id="prev">&#8592;</button>
+    <div id="where"></div>
+    <button id="next">&#8594;</button>
+    <span style="width:12px"></span>
+    <button id="fill" title="Make the selected image cover the page">Fill page</button>
+    <button id="fit" title="Fit the whole image on the page">Fit page</button>
+    <button id="centre">Centre</button>
+    <button id="rotl" title="Rotate left">&#8630;</button>
+    <button id="rotr" title="Rotate right">&#8631;</button>
+    <button id="front">Bring front</button>
+    <button id="del">Delete</button>
+    <button id="clear">Clear page</button>
+    <button id="undo" title="Undo (⌘Z)">Undo</button>
+    <span class="grow"></span>
+    <button id="addpg">+ spread</button>
+    <button id="rmpg">&minus; page</button>
+    <span style="width:12px"></span>
+    <select id="trim">
+      <option value="12,12">12 × 12 in</option>
+      <option value="11,11">11 × 11 in</option>
+      <option value="10,10">10 × 10 in</option>
+      <option value="11,8.5">11 × 8.5 in landscape</option>
+      <option value="8.5,11">8.5 × 11 in portrait</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:.3rem;color:#666"><input type="checkbox" id="bleed" checked> bleed</label>
+    <button id="pdf" class="primary">Export PDF</button>
+    <button id="save">Save layout</button>
+    <label class="btn">Load<input type="file" id="load" accept="application/json" hidden></label>
+  </div>
+  <div id="stage"></div>
+</div>
+
+<div id="bottom">
+  <div id="bbar">
+    <input id="q" placeholder="Search 281 images — name or folder">
+    <select id="grp"><option value="">All folders</option></select>
+    <span id="hint">Drag an image onto a page · drag to move · corners or scroll wheel to resize · ⌘Z undo. Export = proof quality; ask Claude for the 300 dpi print master from the same layout.</span>
+  </div>
+  <div id="grid"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+const KEY='cac-book-layout-v1';
+let MAN=null, BOOK=null, view=0, sel=null;   // sel = {p:pageIndex, i:itemIndex}
+const byId = id => MAN.byId[id];
+
+/* ---------------- data ---------------- */
+async function boot(){
+  MAN = await (await fetch('manifest.json')).json();
+  MAN.byId = Object.fromEntries(MAN.images.map(i=>[i.id,i]));
+  const saved = localStorage.getItem(KEY);
+  BOOK = saved ? JSON.parse(saved) : await (await fetch('seed.json')).json();
+  normalise();
+  buildGrid(); render();
+}
+function aspect(im, rot){ return (rot%180) ? im.h/im.w : im.w/im.h; }
+function coverRect(im, rot){                       // fill the page, keep aspect
+  const a = aspect(im, rot||0);                        // page is w×h units of 1
+  const pa = BOOK.trim[0]/BOOK.trim[1];
+  let w,h;
+  if (a > pa){ h = 1; w = a/pa; } else { w = 1; h = pa/a; }
+  return {x:(1-w)/2, y:(1-h)/2, w, h};
+}
+function fitRect(im, rot){
+  const a = aspect(im, rot||0), pa = BOOK.trim[0]/BOOK.trim[1];
+  let w,h;
+  if (a > pa){ w = 1; h = pa/a; } else { h = 1; w = a/pa; }
+  return {x:(1-w)/2, y:(1-h)/2, w, h};
+}
+function normalise(){
+  BOOK.trim = BOOK.trim || [12,12];
+  BOOK.pages.forEach(p=>{
+    p.items = (p.items||[]).filter(it=>it.img && byId(it.img)).map(it=>{
+      if (it.fill || it.w===undefined){ const r = coverRect(byId(it.img)); return {img:it.img, ...r}; }
+      return it;
+    });
+  });
+}
+const save = () => localStorage.setItem(KEY, JSON.stringify(BOOK));
+let HIST=[], HI=-1;
+function snap(){ const j=JSON.stringify(BOOK); if(HIST[HI]===j) return;
+  HIST=HIST.slice(0,HI+1); HIST.push(j); if(HIST.length>60)HIST.shift(); HI=HIST.length-1; }
+function undo(){ if(HI<=0) return; HI--; BOOK=JSON.parse(HIST[HI]); sel=null; render(true); }
+function redo(){ if(HI>=HIST.length-1) return; HI++; BOOK=JSON.parse(HIST[HI]); sel=null; render(true); }
+
+/* ---------------- spreads ---------------- */
+// leaf 0 alone (outside front), then pairs, last alone (outside back)
+function spreads(){
+  const n = BOOK.pages.length, out = [[0]];
+  for (let i=1;i<n-1;i+=2) out.push([i, i+1<n-1 ? i+1 : null]);
+  out.push([n-1]);
+  return out;
+}
+function render(noSnap){
+  const sp = spreads(); view = Math.max(0, Math.min(view, sp.length-1));
+  const stage = document.getElementById('stage'); stage.innerHTML='';
+  const [tw,th] = BOOK.trim, ar = tw/th;
+  const pair = sp[view].filter(x=>x!==null).length;
+  const availH = stage.clientHeight - 46, availW = stage.clientWidth - 40;
+  let ph = Math.min(availH, (availW - (pair>1?14:0)) / (pair*ar));
+  ph = Math.max(150, ph); const pw = ph*ar;
+  sp[view].forEach(pi=>{
+    const wrap = document.createElement('div'); wrap.className='wrap';
+    const d = document.createElement('div'); d.className='leaf';
+    if (pi===null){ d.classList.add('empty-slot'); d.style.width=pw+'px'; d.style.height=ph+'px';
+                    wrap.appendChild(d); stage.appendChild(wrap); return; }
+    d.style.width=pw+'px'; d.style.height=ph+'px'; d.dataset.p=pi;
+    const t = document.createElement('div'); t.className='tag';
+    t.textContent = (BOOK.pages[pi].role==='Page') ? 'Page '+(pi-1) : BOOK.pages[pi].role;
+    wrap.appendChild(t);
+    BOOK.pages[pi].items.forEach((it,ii)=>{
+      const el = document.createElement('div'); el.className='it'+((sel&&sel.p===pi&&sel.i===ii)?' sel':'');
+      el.style.left=(it.x*100)+'%'; el.style.top=(it.y*100)+'%';
+      el.style.width=(it.w*100)+'%'; el.style.height=(it.h*100)+'%';
+      const im = document.createElement('img'); im.src='img/'+it.img+'.jpg';
+      if (it.rot){
+        el.style.overflow='hidden';
+        im.style.position='absolute'; im.style.left='50%'; im.style.top='50%';
+        if (it.rot%180){ im.style.width=(it.h*ph)+'px'; im.style.height=(it.w*pw)+'px'; }
+        else { im.style.width='100%'; im.style.height='100%'; }
+        im.style.transform='translate(-50%,-50%) rotate('+it.rot+'deg)';
+      }
+      el.appendChild(im);
+      el.dataset.p=pi; el.dataset.i=ii; d.appendChild(el);
+    });
+    wrap.appendChild(d); stage.appendChild(wrap);
+  });
+  const ovl=document.createElement('div'); ovl.id='ovl'; stage.appendChild(ovl); drawOverlay();
+  document.getElementById('where').textContent =
+    (view===0?'Front cover':view===sp.length-1?'Back cover':'Spread '+view+' of '+(sp.length-2));
+  document.getElementById('prev').disabled = view===0;
+  document.getElementById('next').disabled = view===sp.length-1;
+  document.querySelectorAll('.cell').forEach(c=>c.classList.toggle('used', used().has(c.dataset.id)));
+  if(!noSnap) snap();
+  save();
+}
+function drawOverlay(){
+  const ovl=document.getElementById('ovl'); if(!ovl) return; ovl.innerHTML='';
+  if(!sel) return;
+  const el=document.querySelector(`.it[data-p="${sel.p}"][data-i="${sel.i}"]`); if(!el) return;
+  const sb=document.getElementById('stage').getBoundingClientRect(), b=el.getBoundingClientRect();
+  const box=document.createElement('div'); box.className='box';
+  box.style.left=(b.left-sb.left)+'px'; box.style.top=(b.top-sb.top)+'px';
+  box.style.width=b.width+'px'; box.style.height=b.height+'px'; ovl.appendChild(box);
+  const pts={nw:[b.left,b.top],ne:[b.right,b.top],sw:[b.left,b.bottom],se:[b.right,b.bottom]};
+  for(const c in pts){
+    const h=document.createElement('div'); h.className='h '+c; h.dataset.corner=c;
+    h.dataset.p=sel.p; h.dataset.i=sel.i;
+    h.style.left=(pts[c][0]-sb.left)+'px'; h.style.top=(pts[c][1]-sb.top)+'px';
+    ovl.appendChild(h);
+  }
+}
+const used = () => new Set(BOOK.pages.flatMap(p=>p.items.map(i=>i.img)));
+
+/* ---------------- grid ---------------- */
+function buildGrid(){
+  const g=document.getElementById('grid'), sel=document.getElementById('grp');
+  const groups=[...new Set(MAN.images.map(i=>i.group))];
+  groups.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
+  document.getElementById('q').placeholder = 'Search '+MAN.images.length+' images — name or folder';
+  g.innerHTML='';
+  groups.forEach(gr=>{
+    const h=document.createElement('h3'); h.textContent=gr+' · '+MAN.images.filter(i=>i.group===gr).length; h.dataset.g=gr;
+    const row=document.createElement('div'); row.className='row'; row.dataset.g=gr;
+    MAN.images.filter(i=>i.group===gr).forEach(i=>{
+      const c=document.createElement('div'); c.className='cell'; c.draggable=true; c.dataset.id=i.id; c.title=i.name;
+      const im=document.createElement('img'); im.loading='lazy'; im.src='thumb/'+i.id+'.jpg'; c.appendChild(im);
+      c.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain', i.id));
+      c.addEventListener('dblclick',()=>placeOn(currentFirstPage(), i.id));
+      row.appendChild(c);
+    });
+    g.appendChild(h); g.appendChild(row);
+  });
+}
+function filterGrid(){
+  const q=document.getElementById('q').value.toLowerCase(), gr=document.getElementById('grp').value;
+  document.querySelectorAll('#grid .row').forEach(row=>{
+    let shown=0;
+    row.querySelectorAll('.cell').forEach(c=>{
+      const im=MAN.byId[c.dataset.id];
+      const ok=(!gr||im.group===gr)&&(!q||(im.name+' '+im.group).toLowerCase().includes(q));
+      c.style.display=ok?'':'none'; if(ok) shown++;
+    });
+    row.style.display=shown?'':'none';
+    row.previousElementSibling.style.display=shown?'':'none';
+  });
+}
+function currentFirstPage(){ return spreads()[view].find(x=>x!==null); }
+
+/* ---------------- placing, moving, resizing ---------------- */
+function placeOn(pi, id, at){
+  const im=byId(id); if(!im) return;
+  const r=coverRect(im);
+  if (at){ r.x=at.x-r.w/2; r.y=at.y-r.h/2; }
+  BOOK.pages[pi].items.push({img:id, ...r});
+  sel={p:pi,i:BOOK.pages[pi].items.length-1}; render();
+}
+const stage=document.getElementById('stage');
+stage.addEventListener('dragover',e=>{ const l=e.target.closest('.leaf'); if(!l||!l.dataset.p) return;
+  e.preventDefault(); l.classList.add('drop'); });
+stage.addEventListener('dragleave',e=>{ const l=e.target.closest('.leaf'); if(l) l.classList.remove('drop'); });
+stage.addEventListener('drop',e=>{
+  const l=e.target.closest('.leaf'); if(!l||!l.dataset.p) return; e.preventDefault(); l.classList.remove('drop');
+  const id=e.dataTransfer.getData('text/plain'); if(!id) return;
+  const b=l.getBoundingClientRect();
+  placeOn(+l.dataset.p, id, {x:(e.clientX-b.left)/b.width, y:(e.clientY-b.top)/b.height});
+});
+let drag=null;
+stage.addEventListener('pointerdown',e=>{
+  const h=e.target.closest('.h');
+  let el = h ? document.querySelector(`.it[data-p="${h.dataset.p}"][data-i="${h.dataset.i}"]`) : e.target.closest('.it');
+  if(!el){ sel=null; render(); return; }
+  const p=+el.dataset.p, i=+el.dataset.i, it=BOOK.pages[p].items[i];
+  sel={p,i};
+  const leaf=el.closest('.leaf'), b=leaf.getBoundingClientRect();
+  drag={p,i,corner:h?h.dataset.corner:null,b,sx:e.clientX,sy:e.clientY,o:{...it}};
+  el.setPointerCapture?.(e.pointerId);
+  render(); e.preventDefault();
+});
+window.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  const it=BOOK.pages[drag.p].items[drag.i], o=drag.o;
+  const dx=(e.clientX-drag.sx)/drag.b.width, dy=(e.clientY-drag.sy)/drag.b.height;
+  if(!drag.corner){ it.x=o.x+dx; it.y=o.y+dy; }
+  else{
+    const ar=o.w/o.h;
+    let w=o.w, h=o.h, x=o.x, y=o.y;
+    const s = drag.corner.includes('e') ? dx : -dx;
+    w=Math.max(.04, o.w+s); h=w/ar;
+    if(drag.corner.includes('w')) x=o.x+o.w-w;
+    if(drag.corner.includes('n')) y=o.y+o.h-h;
+    it.x=x; it.y=y; it.w=w; it.h=h;
+  }
+  paint();
+});
+window.addEventListener('pointerup',()=>{ if(drag){drag=null; render();} });
+function paint(){  // cheap live update without rebuilding
+  const el=document.querySelector(`.it[data-p="${drag.p}"][data-i="${drag.i}"]`); if(!el) return;
+  const it=BOOK.pages[drag.p].items[drag.i];
+  el.style.left=(it.x*100)+'%'; el.style.top=(it.y*100)+'%';
+  el.style.width=(it.w*100)+'%'; el.style.height=(it.h*100)+'%';
+  drawOverlay();
+}
+
+stage.addEventListener('wheel',e=>{
+  const el=e.target.closest('.it'); if(!el) return;
+  e.preventDefault();
+  const p=+el.dataset.p, i=+el.dataset.i; sel={p,i};
+  const it=BOOK.pages[p].items[i], leaf=el.closest('.leaf'), b=leaf.getBoundingClientRect();
+  const cx=(e.clientX-b.left)/b.width, cy=(e.clientY-b.top)/b.height;
+  const k=Math.exp(-e.deltaY*0.0015);
+  const nw=Math.max(.04,it.w*k), nh=it.h*(nw/it.w);
+  it.x=cx-(cx-it.x)*(nw/it.w); it.y=cy-(cy-it.y)*(nh/it.h); it.w=nw; it.h=nh;
+  render();
+},{passive:false});
+
+/* ---------------- toolbar ---------------- */
+const selItem = () => sel ? BOOK.pages[sel.p].items[sel.i] : null;
+document.getElementById('prev').onclick=()=>{view--;sel=null;render();};
+document.getElementById('next').onclick=()=>{view++;sel=null;render();};
+document.getElementById('fill').onclick=()=>{const it=selItem(); if(it){Object.assign(it,coverRect(byId(it.img),it.rot));render();}};
+document.getElementById('fit').onclick=()=>{const it=selItem(); if(it){Object.assign(it,fitRect(byId(it.img),it.rot));render();}};
+function rotate(dir){ const it=selItem(); if(!it) return;
+  it.rot=((it.rot||0)+dir+360)%360;
+  const c={x:it.x+it.w/2,y:it.y+it.h/2}, a=aspect(byId(it.img),it.rot), pa=BOOK.trim[0]/BOOK.trim[1];
+  const area=it.w*it.h; let w=Math.sqrt(area*a/pa), h=area/w;
+  it.w=w; it.h=h; it.x=c.x-w/2; it.y=c.y-h/2; render();
+}
+document.getElementById('rotl').onclick=()=>rotate(-90);
+document.getElementById('rotr').onclick=()=>rotate(90);
+document.getElementById('centre').onclick=()=>{const it=selItem(); if(it){it.x=(1-it.w)/2;it.y=(1-it.h)/2;render();}};
+document.getElementById('front').onclick=()=>{const it=selItem(); if(it){const a=BOOK.pages[sel.p].items;a.splice(sel.i,1);a.push(it);sel.i=a.length-1;render();}};
+document.getElementById('clear').onclick=()=>{const p=currentFirstPage(); if(p!==undefined){BOOK.pages[p].items=[];sel=null;render();}};
+document.getElementById('undo').onclick=undo;
+document.getElementById('del').onclick=()=>{if(sel){BOOK.pages[sel.p].items.splice(sel.i,1);sel=null;render();}};
+document.getElementById('addpg').onclick=()=>{
+  const at=Math.max(2, (currentFirstPage()||1)+1);
+  BOOK.pages.splice(at,0,{role:'Page',items:[]},{role:'Page',items:[]}); render();
+};
+document.getElementById('rmpg').onclick=()=>{
+  const p=currentFirstPage(); if(p===undefined||BOOK.pages[p].role!=='Page') return;
+  BOOK.pages.splice(p,1); sel=null; render();
+};
+document.getElementById('trim').onchange=e=>{BOOK.trim=e.target.value.split(',').map(Number);normalise();render();};
+document.getElementById('q').oninput=filterGrid;
+document.getElementById('grp').onchange=filterGrid;
+document.getElementById('save').onclick=()=>{
+  const b=new Blob([JSON.stringify(BOOK,null,1)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='book-layout.json'; a.click();
+};
+document.getElementById('load').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ BOOK=JSON.parse(r.result); normalise(); sel=null; view=0; render(); }; r.readAsText(f);
+};
+window.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT') return;
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){ e.shiftKey?redo():undo(); e.preventDefault(); return; }
+  const it=selItem(); const step=e.shiftKey?.02:.005;
+  if(e.key==='ArrowLeft'&&!it){view=Math.max(0,view-1);render();}
+  else if(e.key==='ArrowRight'&&!it){view++;render();}
+  else if(!it) return;
+  else if(e.key==='ArrowLeft'){it.x-=step;render();} else if(e.key==='ArrowRight'){it.x+=step;render();}
+  else if(e.key==='ArrowUp'){it.y-=step;render();} else if(e.key==='ArrowDown'){it.y+=step;render();}
+  else if(e.key==='Backspace'||e.key==='Delete'){BOOK.pages[sel.p].items.splice(sel.i,1);sel=null;render();}
+  else return;
+  e.preventDefault();
+});
+window.addEventListener('resize',()=>render());
+
+/* ---------------- PDF ---------------- */
+const loadImg = src => new Promise(res=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>res(i); i.onerror=()=>res(null); i.src=src; });
+document.getElementById('pdf').onclick=async()=>{
+  const btn=document.getElementById('pdf'); btn.disabled=true; const label=btn.textContent;
+  const [tw,th]=BOOK.trim, bleed=document.getElementById('bleed').checked?0.125:0;
+  const W=tw+bleed*2, H=th+bleed*2;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'in',format:[W,H],orientation:W>H?'landscape':'portrait',compress:true});
+  const cache={};
+  for(let p=0;p<BOOK.pages.length;p++){
+    btn.textContent='Exporting '+(p+1)+'/'+BOOK.pages.length;
+    if(p) doc.addPage([W,H], W>H?'landscape':'portrait');
+    doc.setFillColor(255,255,255); doc.rect(0,0,W,H,'F');
+    for(const it of BOOK.pages[p].items){
+      const src='img/'+it.img+'.jpg';
+      cache[src] = cache[src] || await loadImg(src);
+      let im=cache[src]; if(!im) continue;
+      if (it.rot){
+        const key=src+'#'+it.rot;
+        if(!cache[key]){
+          const c=document.createElement('canvas');
+          const sw=im.naturalWidth, sh=im.naturalHeight;
+          c.width = (it.rot%180)? sh : sw; c.height = (it.rot%180)? sw : sh;
+          const g=c.getContext('2d'); g.translate(c.width/2,c.height/2);
+          g.rotate(it.rot*Math.PI/180); g.drawImage(im,-sw/2,-sh/2);
+          cache[key]=c;
+        }
+        im=cache[key];
+      }
+      let x=it.x*tw+bleed, y=it.y*th+bleed, w=it.w*tw, h=it.h*th;
+      if(bleed){   // grow anything that runs to the trim edge out into the bleed
+        const e=0.004;
+        if(it.x<=e&&it.y<=e&&it.x+it.w>=1-e&&it.y+it.h>=1-e){ x-=bleed;y-=bleed;w+=bleed*2;h+=bleed*2; }
+      }
+      doc.addImage(im,'JPEG',x,y,w,h,undefined,'FAST');
+    }
+  }
+  doc.save('crossroads-art-club-'+tw+'x'+th+'.pdf');
+  btn.textContent=label; btn.disabled=false;
+};
+boot();
+</script></body></html>
