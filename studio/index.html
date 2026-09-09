@@ -19,6 +19,8 @@ button:hover,label.btn:hover{border-color:#999}
 button:disabled{opacity:.35;cursor:default}
 button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
 #where{font-variant-numeric:tabular-nums;min-width:12rem;text-align:center;color:#666}
+#dpi{font-variant-numeric:tabular-nums;font-size:12px;color:#666;min-width:5.2rem;text-align:center}
+#dpi.low{color:#b23; font-weight:600}
 #stage{flex:1 1 0;display:flex;align-items:center;justify-content:center;gap:14px;padding:22px 14px 14px;min-height:0;overflow:hidden;background:var(--panel)}
 .leaf{position:relative;background:#fff;box-shadow:0 6px 22px rgba(0,0,0,.13);overflow:hidden;flex:0 0 auto}
 .leaf.empty-slot{box-shadow:none;background:transparent}
@@ -84,12 +86,19 @@ h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;font-
     <button id="rmpg">&minus; page</button>
     <span style="width:12px"></span>
     <select id="trim">
-      <option value="12,12">12 × 12 in</option>
-      <option value="11,11">11 × 11 in</option>
-      <option value="10,10">10 × 10 in</option>
+      <option value="12,12">12 × 12 in square</option>
+      <option value="13,13">13 × 13 in square</option>
+      <option value="11,11">11 × 11 in square</option>
+      <option value="10,10">10 × 10 in square</option>
+      <option value="14,11">14 × 11 in landscape</option>
+      <option value="15,12">15 × 12 in landscape</option>
+      <option value="11,14">11 × 14 in portrait</option>
+      <option value="12,15">12 × 15 in portrait</option>
       <option value="11,8.5">11 × 8.5 in landscape</option>
       <option value="8.5,11">8.5 × 11 in portrait</option>
     </select>
+    <span id="dpi" title="Print resolution of the selected image at this size"></span>
+    <button id="check" title="Which pages will print soft at this size?">Check print</button>
     <label style="display:flex;align-items:center;gap:.3rem;color:#666"><input type="checkbox" id="bleed" checked> bleed</label>
     <button id="pdf" class="primary">Export PDF</button>
     <button id="save">Save layout</button>
@@ -199,6 +208,7 @@ function render(noSnap){
   const ovl=document.createElement('div'); ovl.id='ovl'; stage.appendChild(ovl); drawOverlay();
   document.getElementById('where').textContent =
     (view===0?'Front cover':view===sp.length-1?'Back cover':'Spread '+view+' of '+(sp.length-2));
+  showDpi();
   document.getElementById('prev').disabled = view===0;
   document.getElementById('next').disabled = view===sp.length-1;
   document.querySelectorAll('.cell').forEach(c=>c.classList.toggle('used', used().has(c.dataset.id)));
@@ -220,6 +230,17 @@ function drawOverlay(){
     h.style.left=(pts[c][0]-sb.left)+'px'; h.style.top=(pts[c][1]-sb.top)+'px';
     ovl.appendChild(h);
   }
+}
+function itemDpi(it){
+  const im=byId(it.img); if(!im) return null;
+  const [tw,th]=BOOK.trim;
+  return Math.round(Math.min(im.ow/(Math.abs(it.w)*tw), im.oh/(Math.abs(it.h)*th)));
+}
+function showDpi(){
+  const el=document.getElementById('dpi'); if(!el) return;
+  const it=sel?BOOK.pages[sel.p].items[sel.i]:null;
+  if(!it){ el.textContent=''; el.className=''; return; }
+  const d=itemDpi(it); el.textContent=d?d+' dpi':''; el.className=(d&&d<150)?'low':'';
 }
 const used = () => new Set(BOOK.pages.flatMap(p=>p.items.map(i=>i.img)));
 
@@ -326,7 +347,7 @@ function paint(){  // cheap live update without rebuilding
   const it=BOOK.pages[drag.p].items[drag.i];
   el.style.left=(it.x*100)+'%'; el.style.top=(it.y*100)+'%';
   el.style.width=(it.w*100)+'%'; el.style.height=(it.h*100)+'%';
-  drawOverlay();
+  drawOverlay(); showDpi();
 }
 
 stage.addEventListener('wheel',e=>{
@@ -359,6 +380,13 @@ document.getElementById('centre').onclick=()=>{const it=selItem(); if(it){it.x=(
 document.getElementById('front').onclick=()=>{const it=selItem(); if(it){const a=BOOK.pages[sel.p].items;a.splice(sel.i,1);a.push(it);sel.i=a.length-1;render();}};
 document.getElementById('clear').onclick=()=>{const p=currentFirstPage(); if(p!==undefined){BOOK.pages[p].items=[];sel=null;render();}};
 document.getElementById('undo').onclick=undo;
+document.getElementById('check').onclick=()=>{
+  const bad=[];
+  BOOK.pages.forEach((pg,i)=>pg.items.forEach(it=>{ const d=itemDpi(it); if(d&&d<150) bad.push((pg.role==='Page'?'p'+(i-1):pg.role)+' '+d+'dpi'); }));
+  const [tw,th]=BOOK.trim;
+  setHint(bad.length ? bad.length+' of '+BOOK.pages.flatMap(p=>p.items).length+' images print under 150 dpi at '+tw+'×'+th+' in: '+bad.slice(0,12).join(', ')+(bad.length>12?' …':'')
+                     : 'Every image prints at 150 dpi or better at '+tw+'×'+th+' in.');
+};
 document.getElementById('del').onclick=()=>{if(sel){BOOK.pages[sel.p].items.splice(sel.i,1);sel=null;render();}};
 document.getElementById('addpg').onclick=()=>{
   const at=Math.max(2, (currentFirstPage()||1)+1);
