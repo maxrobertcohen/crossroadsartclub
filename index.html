@@ -529,23 +529,42 @@
     .partners-section h2 { color: var(--night); }
 
     .partners-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      justify-items: center;
+      gap: 40px 36px;
+      margin-top: 44px;
+    }
+
+    /* every logo gets an identical box and fills as much of it as its shape allows,
+       so wide wordmarks and square badges read at the same weight */
+    .partners-grid > a {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 56px 64px;
-      margin-top: 40px;
+      width: 100%;
+      height: 84px;
+      padding: 0 6px;
     }
 
     .partner-logo {
-      height: 58px;
+      max-width: 100%;
+      max-height: 100%;
       width: auto;
-      max-width: 160px;
+      height: auto;
       object-fit: contain;
       opacity: 0.8;
       filter: grayscale(0.25);
       transition: opacity 0.3s, filter 0.3s, transform 0.3s;
     }
+
+    /* optical corrections: round badges read small, long thin wordmarks read faint */
+    .logo-badge { max-height: 88%; }
+    .logo-wordmark { max-height: 62%; }
+    /* logos that ship with a solid block background read heavier than open wordmarks */
+    .logo-boxed { max-height: 76%; }
+    .partner-logo-wide { max-height: 80%; }
 
     a:hover > .partner-logo {
       opacity: 1;
@@ -555,10 +574,12 @@
 
     .partner-logo-invert { filter: invert(1) grayscale(0.25); }
 
-    /* banner-format artwork rather than a wordmark: allow more room so it reads */
-    .partner-logo-wide { height: 82px; max-width: 220px; }
-
     a:hover > .partner-logo-invert { filter: invert(1) grayscale(0); }
+
+    @media (max-width: 1040px) {
+      .partners-grid { grid-template-columns: repeat(3, 1fr); gap: 34px 28px; }
+      .partners-grid > a { height: 72px; }
+    }
 
     /* ---------- FOOTER ---------- */
     footer {
@@ -627,9 +648,8 @@
       .press-row:hover { padding-left: 8px; }
       .press-arrow { display: none; }
 
-      .partners-grid { gap: 36px 40px; }
-      .partner-logo { height: 44px; }
-      .partner-logo-wide { height: 62px; max-width: 170px; }
+      .partners-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 24px; }
+      .partners-grid > a { height: 64px; }
     }
   </style>
 </head>
@@ -797,15 +817,15 @@
         <a href="https://thenytrust.org/" target="_blank" rel="noopener noreferrer"><img src="CAC NYCT.png" alt="The New York Community Trust" class="partner-logo partner-logo-invert"></a>
         <a href="https://nycconnect.org/about" target="_blank" rel="noopener noreferrer"><img src="CAC NYC CONNECT.png" alt="NYC Connect" class="partner-logo"></a>
         <a href="https://oyategroup.org/" target="_blank" rel="noopener noreferrer"><img src="oyate-group-large-logo.png" alt="Oyate Group" class="partner-logo"></a>
-        <a href="https://overbrook.org/" target="_blank" rel="noopener noreferrer"><img src="Overbrook.png" alt="The Overbrook Foundation" class="partner-logo"></a>
-        <a href="https://citizensnyc.org/" target="_blank" rel="noopener noreferrer"><img src="Citizens Logo.png" alt="Citizens Committee for New York City" class="partner-logo"></a>
-        <a href="https://nycaieroundtable.org/" target="_blank" rel="noopener noreferrer"><img src="IMG_4542.jpeg" alt="NYC Arts in Education Roundtable" class="partner-logo"></a>
-        <a href="https://www.artontheavenyc.com" target="_blank" rel="noopener noreferrer"><img src="IMG_4544.png" alt="Art On The Ave" class="partner-logo"></a>
+        <a href="https://overbrook.org/" target="_blank" rel="noopener noreferrer"><img src="Overbrook.png" alt="The Overbrook Foundation" class="partner-logo logo-boxed"></a>
+        <a href="https://citizensnyc.org/" target="_blank" rel="noopener noreferrer"><img src="Citizens Logo.png" alt="Citizens Committee for New York City" class="partner-logo logo-boxed"></a>
+        <a href="https://nycaieroundtable.org/" target="_blank" rel="noopener noreferrer"><img src="IMG_4542.jpeg" alt="NYC Arts in Education Roundtable" class="partner-logo logo-boxed"></a>
+        <a href="https://churchoftheincarnation.org" target="_blank" rel="noopener noreferrer"><img src="IMG_4553.png" alt="Church of the Incarnation" class="partner-logo logo-wordmark"></a>
+        <a href="https://www.artontheavenyc.com" target="_blank" rel="noopener noreferrer"><img src="IMG_4544.png" alt="Art On The Ave" class="partner-logo logo-badge"></a>
         <a href="https://www.artisticnoise.org" target="_blank" rel="noopener noreferrer"><img src="IMG_4551.png" alt="Artistic Noise" class="partner-logo"></a>
         <a href="https://www.materialsforthearts.org" target="_blank" rel="noopener noreferrer"><img src="IMG_4552.png" alt="Materials for the Arts" class="partner-logo"></a>
-        <a href="https://centerforartandadvocacy.org" target="_blank" rel="noopener noreferrer"><img src="Center for Art and Advocacy.jpeg" alt="Center for Art and Advocacy" class="partner-logo"></a>
-        <a href="https://www.bklyncombine.com" target="_blank" rel="noopener noreferrer"><img src="The Brooklyn Combine.jpeg" alt="The Brooklyn Combine" class="partner-logo"></a>
-        <a href="https://churchoftheincarnation.org" target="_blank" rel="noopener noreferrer"><img src="IMG_4553.png" alt="Church of the Incarnation" class="partner-logo"></a>
+        <a href="https://centerforartandadvocacy.org" target="_blank" rel="noopener noreferrer"><img src="Center for Art and Advocacy.jpeg" alt="Center for Art and Advocacy" class="partner-logo logo-boxed"></a>
+        <a href="https://www.bklyncombine.com" target="_blank" rel="noopener noreferrer"><img src="The Brooklyn Combine.jpeg" alt="The Brooklyn Combine" class="partner-logo logo-boxed"></a>
         <a href="https://actionnetwork.org/groups/anne-feeney-hellraiser-fund" target="_blank" rel="noopener noreferrer"><img src="Anne Feeney Hellraiser Fund.jpeg" alt="Anne Feeney Hellraiser Fund" class="partner-logo partner-logo-wide"></a>
       </div>
     </div>
