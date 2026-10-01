@@ -107,10 +107,22 @@
     .hero-bg {
       position: absolute;
       inset: 0;
-      background:
-        radial-gradient(130% 95% at 18% 8%, rgba(217, 164, 65, 0.16) 0%, rgba(217, 164, 65, 0) 58%),
-        radial-gradient(115% 85% at 88% 22%, rgba(201, 123, 90, 0.17) 0%, rgba(201, 123, 90, 0) 60%),
-        linear-gradient(to bottom, #241C16 0%, #1C1612 46%, var(--night) 100%);
+      background: var(--night);
+    }
+
+    .hero-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 42%;
+      filter: saturate(1.08) contrast(1.03) brightness(0.84);
+      transform: scale(1.04);
+      animation: heroDrift 20s ease-out both;
+    }
+
+    @keyframes heroDrift {
+      from { transform: scale(1.1); }
+      to { transform: scale(1.04); }
     }
 
     .hero-bg::after {
@@ -118,7 +130,8 @@
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(to top, var(--night) 4%, rgba(21,17,14,0.55) 34%, rgba(21,17,14,0) 72%);
+        linear-gradient(to top, var(--night) 3%, rgba(21,17,14,0.9) 24%, rgba(21,17,14,0.5) 54%, rgba(21,17,14,0.26) 80%, rgba(21,17,14,0.5) 100%),
+        linear-gradient(to right, rgba(21,17,14,0.72) 0%, rgba(21,17,14,0.18) 52%, rgba(21,17,14,0) 100%);
     }
 
     .hero-content {
@@ -126,6 +139,7 @@
       z-index: 2;
       padding: 0 48px 96px;
       max-width: 1200px;
+      text-shadow: 0 1px 28px rgba(21, 17, 14, 0.7);
     }
 
     .hero-kicker {
@@ -656,7 +670,9 @@
 
   <!-- HERO -->
   <header class="hero">
-    <div class="hero-bg"></div>
+    <div class="hero-bg">
+      <img src="hero-shoot-4-the-stars.jpg" alt="&ldquo;Shoot 4 the Stars&rdquo; &mdash; a collaborative drawing made in Art Club: a bridge, a thundercloud wearing a crown, a basket of fries holding a paintbrush, a satellite, a snail on a cloud">
+    </div>
     <div class="hero-content">
       <p class="hero-kicker hero-fade">Brownsville, Brooklyn &mdash; Est. 2023</p>
       <h1 class="hero-fade">Crossroads<br><em>Art Club</em></h1>
